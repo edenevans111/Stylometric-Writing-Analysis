@@ -1,6 +1,8 @@
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
+import string
 
+# lexical features
 def word_count(string):
     return len(word_tokenize(string))
 
@@ -25,8 +27,23 @@ def hapax_legomenon_rate(unique_word_count, word_count):
 def unique_proportion(unique, words):
     return unique/words
 
+# syntax features
 def sentence_count(string):
     return len(sent_tokenize(string))
+
+def average_sent_length(sent_count, word_count):
+    return word_count/sent_count
+
+def punctuation_count(sentence):
+    word_tokens = word_tokenize(sentence)
+    punctuation_marks = set(string.punctuation)
+    # I know that I have a good set of punctuation marks here now
+    punctuation_count = 0
+    for token in word_tokens:
+        if token in punctuation_marks:
+            punctuation_count += 1
+    return punctuation_count
+
 
 def num_stop_words(string):
     stop_words = set(stopwords.word("english"))
@@ -39,9 +56,9 @@ def num_stop_words(string):
 
 
 def main():
-    exampleString = "This is an example to show us all how this works"
+    exampleString = "This is an example: to show us all how this works"
     print(word_tokenize(exampleString.lower()))
-    print(unique_word_count(exampleString))
+    print(punctuation_count(exampleString))
 
 
 if __name__ == '__main__':
