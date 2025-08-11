@@ -54,12 +54,35 @@ def stop_words_count(sentence):
             stop_count += 1
     return stop_count
 
+def question_count(sentence):
+    tokens = word_tokenize(sentence)
+    question_count = 0
+    for token in tokens:
+        if token == '?':
+            question_count += 1
+    return question_count
+
+# Named Entity features
+def first_person_pronouns(sentence):
+    tokens = word_tokenize(sentence)
+    count = 0
+    first_person_list = ['I', 'me', 'mine', 'myself', 'we', 'us', 'our', 'ourselves']
+    for token in tokens:
+        if token in first_person_list:
+            count += 1
+    return count
+
+## Things that still need to be figured out:
+# Emotion word count
+# FleschReadingEase
+# Contraction Count
+
+
 
 
 def main():
-    exampleString = "This is an example: to show us all how this works"
-    print(word_tokenize(exampleString.lower()))
-    print(stop_words_count(exampleString))
+    exampleString = "This is an example: to don't show us all how this works"
+    print(word_tokenize(exampleString))
 
 
 if __name__ == '__main__':
