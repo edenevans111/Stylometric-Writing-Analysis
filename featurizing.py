@@ -45,20 +45,21 @@ def punctuation_count(sentence):
     return punctuation_count
 
 
-def num_stop_words(string):
-    stop_words = set(stopwords.word("english"))
-    all_stops = []
-    for word in string:
-        if word.casefold() in stop_words:
-            all_stops.append(word)
-    return len(all_stops)
+def stop_words_count(sentence):
+    stop_words = set(stopwords.words("english"))
+    word_tokens = word_tokenize(sentence)
+    stop_count = 0
+    for token in word_tokens:
+        if token in stop_words:
+            stop_count += 1
+    return stop_count
 
 
 
 def main():
     exampleString = "This is an example: to show us all how this works"
     print(word_tokenize(exampleString.lower()))
-    print(punctuation_count(exampleString))
+    print(stop_words_count(exampleString))
 
 
 if __name__ == '__main__':
