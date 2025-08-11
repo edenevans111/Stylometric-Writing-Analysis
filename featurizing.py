@@ -4,9 +4,6 @@ from nltk.corpus import stopwords
 def word_count(string):
     return len(word_tokenize(string))
 
-def sentence_count(string):
-    return len(sent_tokenize(string))
-
 def unique_word_count(string):
     unique_words = []
     for word in string:
@@ -14,8 +11,21 @@ def unique_word_count(string):
             unique_words.append(word)
     return len(unique_words)
 
+def character_count(string):
+    return len(string)
+
+def avg_word_length(char_count, word_count):
+    return char_count/word_count
+
+def hapax_legomenon_rate(unique_word_count, word_count):
+    return unique_word_count/word_count
+
+# measures the lexical diversity (unique word count / word count)
 def unique_prop(unique, words):
     return unique/words
+
+def sentence_count(string):
+    return len(sent_tokenize(string))
 
 def num_stop_words(string):
     stop_words = set(stopwords.word("english"))
@@ -24,9 +34,6 @@ def num_stop_words(string):
         if word.casefold() in stop_words:
             all_stops.append(word)
     return len(all_stops)
-
-def character_count(string):
-    return len(string)
 
 
 
