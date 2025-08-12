@@ -126,13 +126,14 @@ def main():
     # Need to make a pandas dataframe
     df = pd.DataFrame(columns=['Word Count', 'Unique Words', 'Characters', 'Average Word Lengths', 
                                'Hapax Legomenons', 'Sentence Count', 'Average Sentence Length', 
-                               'Punctuation Marks', 'Stop Words', 'Questions', 'First Person Pronouns'])
+                               'Punctuation Marks', 'Stop Words', 'Questions', 'First Person Pronouns', 'Role'])
 
-    with open('sample_reasoning_turns_wait.csv') as infile:
+    with open('sample_reasoning_turns_wait_roles copy.csv') as infile:
         csvreader = csv.reader(infile)
         next(csvreader)
         for row in csvreader:
             features = list_of_features(row[0])
+            features.append(row[1])
             df.loc[len(df)] = features
 
     print(df.head())
