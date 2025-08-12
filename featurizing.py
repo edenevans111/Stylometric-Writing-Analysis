@@ -1,28 +1,35 @@
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
+from nltk.probability import FreqDist
 import string
+import csv
 
 # lexical features
-def word_count(string):
-    return len(word_tokenize(string))
+def word_count(sentence):
+    return len(word_tokenize(sentence))
 
-def unique_word_count(string):
-    string = string.lower()
-    all_words = word_tokenize(string)
+def unique_word_count(sentence):
+    sentence = sentence.lower()
+    all_words = word_tokenize(sentence)
     unique_words = []
     for word in all_words:
         if word.lower() not in unique_words:
             unique_words.append(word)
     return len(unique_words)
 
-def character_count(string):
-    return len(string)
+def character_count(sentence):
+    return len(sentence)
 
 def avg_word_length(char_count, word_count):
-    return char_count/word_count
+    return char_count / word_count
 
-def hapax_legomenon_rate(unique_word_count, word_count):
-    return unique_word_count/word_count
+def hapax_legomenon_rate(sentence):
+    tokens = word_tokenize(sentence.lower())
+    word_count = word_count(sentence)
+    fdist = FreqDist(tokens)
+    hapaxes = fdist.hapaxes()
+    return len(hapaxes) / word_count
+    
 
 def unique_proportion(unique, words):
     return unique/words
@@ -72,6 +79,33 @@ def first_person_pronouns(sentence):
             count += 1
     return count
 
+def list_of_features(sentence):
+    features = []
+    # Lexical features
+    words = word_count(sentence)
+    unique_words = unique_word_count(sentence)
+    characters = character_count(sentence)
+    avg_word_lengths = avg_word_length(characters, words)
+    hapax_legomenons = hapax_legomenon_rate(sentence)
+    # syntax features
+    sentences = sentence_count(sentence)
+    average_sent_lengths = average_sent_length(sentences, words)
+    punctuations = punctuation_count(sentence)
+    stop_words = stop_words_count(sentence)
+    questions = question_count(sentence)
+    first_persons = first_person_pronouns(sentence)
+
+    features.append(words)
+    features.append(unique_words)
+    features.append(characters)
+    features.append(avg_word_lengths)
+    features.append(hapax_legomenons)
+
+    features.append(sentences, average_sent_lengths, punctuations, stop_words, questions, first_persons)
+    
+    return features
+
+
 ## Things that still need to be figured out:
 # Emotion word count
 # FleschReadingEase
@@ -81,8 +115,15 @@ def first_person_pronouns(sentence):
 
 
 def main():
-    exampleString = "This is an example: to don't show us all how this works"
-    print(word_tokenize(exampleString))
+
+    with open('sample_reasoning_turns_wait.csv') as infile:
+        csvreader = csv.reader(infile)
+        next(csvreader)
+        next_sentence = next(csvreader)
+        features = list_of_features(next_sentence[0])
+        print(features)
+
+        
 
 
 if __name__ == '__main__':

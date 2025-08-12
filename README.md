@@ -17,3 +17,12 @@ Each of the sections gets a evaulated for different stylometric features
 - Emotion word count
 - Flesh reading ease score (need to reasearch how to calculate this)
 - First person count (number of first person pronouns)
+
+** featurizing.py **
+
+This file is for taking in all the different snippets of text and extracting the stylometric features from them and creating a csv file of all the data that can be used to create pandas dataframes later 
+
+** modeling **
+
+Need to get a model that has the y as the category of 'person' that snippet of text is and the x is the extracted features
+
