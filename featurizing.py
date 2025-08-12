@@ -3,6 +3,8 @@ from nltk.corpus import stopwords
 from nltk.probability import FreqDist
 import string
 import csv
+import pandas as pd
+import numpy as np
 
 # lexical features
 def word_count(sentence):
@@ -25,10 +27,10 @@ def avg_word_length(char_count, word_count):
 
 def hapax_legomenon_rate(sentence):
     tokens = word_tokenize(sentence.lower())
-    word_count = word_count(sentence)
+    words = word_count(sentence)
     fdist = FreqDist(tokens)
     hapaxes = fdist.hapaxes()
-    return len(hapaxes) / word_count
+    return len(hapaxes) / words
     
 
 def unique_proportion(unique, words):
@@ -101,7 +103,12 @@ def list_of_features(sentence):
     features.append(avg_word_lengths)
     features.append(hapax_legomenons)
 
-    features.append(sentences, average_sent_lengths, punctuations, stop_words, questions, first_persons)
+    features.append(sentences)
+    features.append(average_sent_lengths)
+    features.append(punctuations)
+    features.append(stop_words)
+    features.append(questions)
+    features.append(first_persons)
     
     return features
 
@@ -116,12 +123,20 @@ def list_of_features(sentence):
 
 def main():
 
+    # Need to make a pandas dataframe
+    df = pd.DataFrame(columns=['Word Count', 'Unique Words', 'Characters', 'Average Word Lengths', 
+                               'Hapax Legomenons', 'Sentence Count', 'Average Sentence Length', 
+                               'Punctuation Marks', 'Stop Words', 'Questions', 'First Person Pronouns'])
+
     with open('sample_reasoning_turns_wait.csv') as infile:
         csvreader = csv.reader(infile)
         next(csvreader)
-        next_sentence = next(csvreader)
-        features = list_of_features(next_sentence[0])
-        print(features)
+        for row in csvreader:
+            features = list_of_features(row[0])
+            df.loc[len(df)] = features
+
+    print(df.head())
+    df.to_csv('stylometric_features.csv')
 
         
 
