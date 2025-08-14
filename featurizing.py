@@ -8,29 +8,6 @@ import csv
 import pandas as pd
 import numpy as np
 
-# helper functions
-def syllable_count(word):
-    word = word.lower()
-    count = 0
-    vowels = "aeiouy"
-    if word[0] in vowels:
-        count += 1
-    for index in range(1, len(word)):
-        if word[index] in vowels and word[index - 1] not in vowels:
-            count += 1
-    if word.endswith("e"):
-        count -= 1
-    if count == 0:
-        count += 1
-    return count
-
-def count_syllable(sentence):
-    syllable_counts = 0
-    tokens = word_tokenize(sentence.lower())
-    for token in tokens:
-        syllable_counts += syllable_count(token)
-    return syllable_counts
-
 # lexical features
 def word_count(sentence):
     return len(word_tokenize(sentence))
@@ -112,24 +89,20 @@ def contractions_count(sentence):
     return contraction_count
 
 # Readability features
-def count_syllables_nltk(sentence):
+def count_syllables_nltk(word):
     # nltk.download('cmudict')
     d = cmudict.dict()
-    sentence.lower() 
-    tokens = word_tokenize(sentence)
-    syllable_count = 0
-    for token in tokens:
-        if token in d:
-            syllable_count += max([len([y for y in x if y[-1].isdigit()]) for x in d[token]])
-        else:
-            syllable_count += 0
-    return syllable_count
+    if word in d:
+        return max([len([y for y in x if y[-1].isdigit()]) for x in d[word]])
+    return 0
 
 def flesch_score(sentence):
     words = word_count(sentence)
     sentences = sentence_count(sentence)
     avg_sent_length = average_sent_length(sentences, words)
-    syllables = count_syllables_nltk(sentence)
+    syllables = 0
+    for token in word_tokenize(sentence.lower()):
+        syllables += count_syllables_nltk(token)
     average_syllables_per_word = syllables / word_count(sentence)
     return 206.835 - (1.015 * avg_sent_length) - (84.6 * average_syllables_per_word)
 
@@ -141,7 +114,7 @@ def gunning_fog_index(words, sentences, text):
     word_tokens = word_tokenize(text.lower())
     complex_word_count = 0
     for word in word_tokens:
-        syllable_count = syllable_count(word)
+        syllable_count = count_syllables_nltk(word)
         if syllable_count >= 3:
             complex_word_count += 1
     gunning_fog = 0.4 * ((words/sentences) + 100 * (complex_word_count/words))
