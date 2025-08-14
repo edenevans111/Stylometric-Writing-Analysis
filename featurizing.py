@@ -6,13 +6,28 @@ import csv
 import pandas as pd
 import numpy as np
 
+# helper functions
+def syllable_count(word): # This works as a placeholder for now, but probably isn't the most accurate
+    word = word.lower()
+    count = 0
+    vowels = "aeiouy"
+    if word[0] in vowels:
+        count += 1
+    for index in range(1, len(word)):
+        if word[index] in vowels and word[index - 1] not in vowels:
+            count += 1
+    if word.endswith("e"):
+        count -= 1
+    if count == 0:
+        count += 1
+    return count
+
 # lexical features
 def word_count(sentence):
     return len(word_tokenize(sentence))
 
 def unique_word_count(sentence):
-    sentence = sentence.lower()
-    all_words = word_tokenize(sentence)
+    all_words = word_tokenize(sentence.lower())
     unique_words = []
     for word in all_words:
         if word.lower() not in unique_words:
@@ -24,6 +39,11 @@ def character_count(sentence):
 
 def avg_word_length(char_count, word_count):
     return char_count / word_count
+
+def ttr_lexical_diversity(unique, words):
+    if words == 0:
+        return 0
+    return unique / words
 
 def hapax_legomenon_rate(sentence):
     tokens = word_tokenize(sentence.lower())
@@ -56,7 +76,7 @@ def punctuation_count(sentence):
 
 def stop_words_count(sentence):
     stop_words = set(stopwords.words("english"))
-    word_tokens = word_tokenize(sentence)
+    word_tokens = word_tokenize(sentence.lower())
     stop_count = 0
     for token in word_tokens:
         if token in stop_words:
@@ -71,13 +91,54 @@ def question_count(sentence):
             question_count += 1
     return question_count
 
+def exclamations_count(sentence):
+    tokens = word_tokenize(sentence)
+    exclamation_count = 0
+    for token in tokens:
+        if token == '!':
+            exclamation_count += 1
+    return exclamation_count
+
+def contractions_count(sentence):
+    tokens = word_tokenize(sentence.lower())
+    contractions = ["'s", "'re", "'ve", "'ll", "'d", "'t", "'m", "'n", "'bout", "'cause", "'ya", "'all", "'em", "'gain", "'cept", "'fore", "'round", "'till", "'neath", "'pon", "'neath", "'twixt", "'tween", "'ight", "'ere", "'am", "'tis", "'twas", "'twere", "'twill"]
+    contraction_count = 0
+    for token in tokens:
+        if token in contractions:
+            contraction_count += 1
+    return contraction_count
+
+# Readability features
+def gunning_fog_index(words, sentences, text):
+    # Gunning Fog Index = 0.4 * [(words/sentences) + 100*(complex words/words)]
+    # Complex words are those with 3 or more syllables
+    if sentences == 0 or words == 0:
+        return 0
+    word_tokens = word_tokenize(text.lower())
+    complex_word_count = 0
+    for word in word_tokens:
+        syllable_count = syllable_count(word)
+        if syllable_count >= 3:
+            complex_word_count += 1
+    gunning_fog = 0.4 * ((words/sentences) + 100 * (complex_word_count/words))
+    return gunning_fog
+
 # Named Entity features
 def first_person_pronouns(sentence):
-    tokens = word_tokenize(sentence)
+    tokens = word_tokenize(sentence.lower())
     count = 0
     first_person_list = ['I', 'me', 'mine', 'myself', 'we', 'us', 'our', 'ourselves']
     for token in tokens:
         if token in first_person_list:
+            count += 1
+    return count
+
+def direct_addresses_count(sentence):
+    tokens = word_tokenize(sentence.lower())
+    count = 0
+    direct_address_list = ['you', 'your', 'yours', 'yourself', 'yourselves', 'hey', 'hi', 'hello']
+    for token in tokens:
+        if token in direct_address_list:
             count += 1
     return count
 
@@ -88,6 +149,7 @@ def list_of_features(sentence):
     unique_words = unique_word_count(sentence)
     characters = character_count(sentence)
     avg_word_lengths = avg_word_length(characters, words)
+    ttr = ttr_lexical_diversity(unique_words, words)
     hapax_legomenons = hapax_legomenon_rate(sentence)
     # syntax features
     sentences = sentence_count(sentence)
@@ -95,12 +157,19 @@ def list_of_features(sentence):
     punctuations = punctuation_count(sentence)
     stop_words = stop_words_count(sentence)
     questions = question_count(sentence)
+    exclamations = exclamations_count(sentence)
+    contractions = contractions_count(sentence)
+    # Readability features
+    gunning_fog = gunning_fog_index(words, sentences, sentence)
+    # Named Entity features
     first_persons = first_person_pronouns(sentence)
+    direct_addresses = direct_addresses_count(sentence)
 
     features.append(words)
     features.append(unique_words)
     features.append(characters)
     features.append(avg_word_lengths)
+    features.append(ttr)
     features.append(hapax_legomenons)
 
     features.append(sentences)
@@ -108,25 +177,40 @@ def list_of_features(sentence):
     features.append(punctuations)
     features.append(stop_words)
     features.append(questions)
+    features.append(exclamations)
+    features.append(contractions)
+
+    features.append(gunning_fog)
+
     features.append(first_persons)
+    features.append(direct_addresses)
     
     return features
 
 
 ## Things that still need to be figured out:
+# AbstractNounCount
+# ComplexVerbCount
+# SophisticatedAdjectiveCount
+# AdverbCount
+# ComplexSentenceCount
 # Emotion word count
-# FleschReadingEase
-# Contraction Count
-
-
-
+# Polarity
+# Subjectivity
+# VaderCompound
+# Person Entities
+# Date Entities
+# Bigram uniqueness
+# Trigram uniqueness
+# Syntax variety
 
 def main():
 
     # Need to make a pandas dataframe
-    df = pd.DataFrame(columns=['Word Count', 'Unique Words', 'Characters', 'Average Word Lengths', 
-                               'Hapax Legomenons', 'Sentence Count', 'Average Sentence Length', 
-                               'Punctuation Marks', 'Stop Words', 'Questions', 'First Person Pronouns', 'Role'])
+    df = pd.DataFrame(columns=['Word Count', 'Unique Words', 'Characters', 'Average Word Lengths', 'TTR',
+                               'Hapax Legomenons', 'Sentence Count', 'Average Sentence Length',
+                               'Punctuation Marks', 'Stop Words', 'Questions', 'Exclamations', 'Contractions',
+                               'Gunning Fog', 'First Person Pronouns', 'Direct Addresses', 'Role'])
 
     with open('sample_reasoning_turns_wait_roles copy.csv') as infile:
         csvreader = csv.reader(infile)
