@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 # helper functions
-def syllable_count(word): # This works as a placeholder for now, but probably isn't the most accurate
+def syllable_count(word):
     word = word.lower()
     count = 0
     vowels = "aeiouy"
@@ -21,6 +21,25 @@ def syllable_count(word): # This works as a placeholder for now, but probably is
     if count == 0:
         count += 1
     return count
+
+def count_syllable(sentence):
+    syllable_count = 0
+    vowels = ['a', 'e', 'i', 'o', 'u', 'y']
+    tokens = word_tokenize(sentence)
+    for token in tokens:
+        count = 0
+        for character in token:
+            if character in vowels:
+                syllable_count += 1
+                if count != 0:
+                    if token[count - 1] in vowels:
+                        syllable_count -= 1
+            count += 1
+        if token[len(token) - 1] == 'e':
+            syllable_count -= 1
+        if len(token) == 1:
+            syllable_count += 1
+    return syllable_count
 
 # lexical features
 def word_count(sentence):
@@ -40,10 +59,8 @@ def character_count(sentence):
 def avg_word_length(char_count, word_count):
     return char_count / word_count
 
-def ttr_lexical_diversity(unique, words):
-    if words == 0:
-        return 0
-    return unique / words
+def unique_proportion(unique, words):
+    return unique/words
 
 def hapax_legomenon_rate(sentence):
     tokens = word_tokenize(sentence.lower())
@@ -51,14 +68,10 @@ def hapax_legomenon_rate(sentence):
     fdist = FreqDist(tokens)
     hapaxes = fdist.hapaxes()
     return len(hapaxes) / words
-    
-
-def unique_proportion(unique, words):
-    return unique/words
 
 # syntax features
-def sentence_count(string):
-    return len(sent_tokenize(string))
+def sentence_count(sentence):
+    return len(sent_tokenize(sentence))
 
 def average_sent_length(sent_count, word_count):
     return word_count/sent_count
@@ -109,6 +122,15 @@ def contractions_count(sentence):
     return contraction_count
 
 # Readability features
+def flesch_score(sentence):
+    words = word_count(sentence)
+    sentences = sentence_count(sentence)
+    avg_sent_length = average_sent_length(sentences, words)
+    syllables = count_syllable(sentence)
+    average_syllables_per_word = syllables / word_count(sentence)
+    return 206.835 - (1.015 * avg_sent_length) - (84.6 * average_syllables_per_word)
+
+
 def gunning_fog_index(words, sentences, text):
     # Gunning Fog Index = 0.4 * [(words/sentences) + 100*(complex words/words)]
     # Complex words are those with 3 or more syllables
@@ -149,7 +171,7 @@ def list_of_features(sentence):
     unique_words = unique_word_count(sentence)
     characters = character_count(sentence)
     avg_word_lengths = avg_word_length(characters, words)
-    ttr = ttr_lexical_diversity(unique_words, words)
+    unique_prop = unique_proportion(unique_words, words)
     hapax_legomenons = hapax_legomenon_rate(sentence)
     # syntax features
     sentences = sentence_count(sentence)
@@ -160,6 +182,7 @@ def list_of_features(sentence):
     exclamations = exclamations_count(sentence)
     contractions = contractions_count(sentence)
     # Readability features
+    flesch_reading_score = flesch_score(sentence)
     gunning_fog = gunning_fog_index(words, sentences, sentence)
     # Named Entity features
     first_persons = first_person_pronouns(sentence)
@@ -169,7 +192,7 @@ def list_of_features(sentence):
     features.append(unique_words)
     features.append(characters)
     features.append(avg_word_lengths)
-    features.append(ttr)
+    features.append(unique_prop)
     features.append(hapax_legomenons)
 
     features.append(sentences)
@@ -180,6 +203,7 @@ def list_of_features(sentence):
     features.append(exclamations)
     features.append(contractions)
 
+    features.append(flesch_reading_score)
     features.append(gunning_fog)
 
     features.append(first_persons)
@@ -205,12 +229,11 @@ def list_of_features(sentence):
 # Syntax variety
 
 def main():
-
     # Need to make a pandas dataframe
-    df = pd.DataFrame(columns=['Word Count', 'Unique Words', 'Characters', 'Average Word Lengths', 'TTR',
+    df = pd.DataFrame(columns=['Word Count', 'Unique Words', 'Characters', 'Average Word Lengths', 'Unique Proportion',
                                'Hapax Legomenons', 'Sentence Count', 'Average Sentence Length',
                                'Punctuation Marks', 'Stop Words', 'Questions', 'Exclamations', 'Contractions',
-                               'Gunning Fog', 'First Person Pronouns', 'Direct Addresses', 'Role'])
+                               'Flesch Reading Score', 'Gunning Fog', 'First Person Pronouns', 'Direct Addresses', 'Role'])
 
     with open('sample_reasoning_turns_wait_roles copy.csv') as infile:
         csvreader = csv.reader(infile)
