@@ -23,23 +23,11 @@ def syllable_count(word):
     return count
 
 def count_syllable(sentence):
-    syllable_count = 0
-    vowels = ['a', 'e', 'i', 'o', 'u', 'y']
-    tokens = word_tokenize(sentence)
+    syllable_counts = 0
+    tokens = word_tokenize(sentence.lower())
     for token in tokens:
-        count = 0
-        for character in token:
-            if character in vowels:
-                syllable_count += 1
-                if count != 0:
-                    if token[count - 1] in vowels:
-                        syllable_count -= 1
-            count += 1
-        if token[len(token) - 1] == 'e':
-            syllable_count -= 1
-        if len(token) == 1:
-            syllable_count += 1
-    return syllable_count
+        syllable_counts += syllable_count(token)
+    return syllable_counts
 
 # lexical features
 def word_count(sentence):
@@ -129,7 +117,6 @@ def flesch_score(sentence):
     syllables = count_syllable(sentence)
     average_syllables_per_word = syllables / word_count(sentence)
     return 206.835 - (1.015 * avg_sent_length) - (84.6 * average_syllables_per_word)
-
 
 def gunning_fog_index(words, sentences, text):
     # Gunning Fog Index = 0.4 * [(words/sentences) + 100*(complex words/words)]
