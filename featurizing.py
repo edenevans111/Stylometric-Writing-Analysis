@@ -1,6 +1,8 @@
+import nltk
 from nltk.tokenize import sent_tokenize, word_tokenize
 from nltk.corpus import stopwords
 from nltk.probability import FreqDist
+from nltk.corpus import cmudict
 import string
 import csv
 import pandas as pd
@@ -101,11 +103,24 @@ def count_syllable(sentence):
             syllable_count += 1
     return syllable_count
 
+def count_syllables_nltk(sentence):
+    # nltk.download('cmudict')
+    d = cmudict.dict()
+    sentence.lower() 
+    tokens = word_tokenize(sentence)
+    syllable_count = 0
+    for token in tokens:
+        if token in d:
+            syllable_count += max([len([y for y in x if y[-1].isdigit()]) for x in d[token]])
+        else:
+            syllable_count += 0
+    return syllable_count
+
 def flesch_score(sentence):
     words = word_count(sentence)
     sentences = sentence_count(sentence)
     avg_sent_length = average_sent_length(sentences, words)
-    syllables = count_syllable(sentence)
+    syllables = count_syllables_nltk(sentence)
     average_syllables_per_word = syllables / word_count(sentence)
     return 206.835 - (1.015 * avg_sent_length) - (84.6 * average_syllables_per_word)
 
