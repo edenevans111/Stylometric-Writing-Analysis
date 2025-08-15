@@ -9,13 +9,12 @@ import pandas as pd
 import numpy as np
 
 # lexical features
-def word_count(sentence):
-    return len(word_tokenize(sentence))
+def word_count(sentence_tokens):
+    return len(sentence_tokens)
 
-def unique_word_count(sentence):
-    all_words = word_tokenize(sentence.lower())
+def unique_word_count(sentence_tokens):
     unique_words = []
-    for word in all_words:
+    for word in sentence_tokens:
         if word.lower() not in unique_words:
             unique_words.append(word)
     return len(unique_words)
@@ -29,10 +28,9 @@ def avg_word_length(char_count, word_count):
 def unique_proportion(unique, words):
     return unique/words
 
-def hapax_legomenon_rate(sentence):
-    tokens = word_tokenize(sentence.lower())
+def hapax_legomenon_rate(sentence, sentence_tokens):
     words = word_count(sentence)
-    fdist = FreqDist(tokens)
+    fdist = FreqDist(sentence_tokens)
     hapaxes = fdist.hapaxes()
     return len(hapaxes) / words
 
@@ -43,47 +41,42 @@ def sentence_count(sentence):
 def average_sent_length(sent_count, word_count):
     return word_count/sent_count
 
-def punctuation_count(sentence):
-    word_tokens = word_tokenize(sentence)
+def punctuation_count(sentence_tokens):
     punctuation_marks = set(string.punctuation)
     # I know that I have a good set of punctuation marks here now
     punctuation_count = 0
-    for token in word_tokens:
+    for token in sentence_tokens:
         if token in punctuation_marks:
             punctuation_count += 1
     return punctuation_count
 
 
-def stop_words_count(sentence):
+def stop_words_count(sentence_tokens):
     stop_words = set(stopwords.words("english"))
-    word_tokens = word_tokenize(sentence.lower())
     stop_count = 0
-    for token in word_tokens:
+    for token in sentence_tokens:
         if token in stop_words:
             stop_count += 1
     return stop_count
 
-def question_count(sentence):
-    tokens = word_tokenize(sentence)
+def question_count(sentence_tokens):
     question_count = 0
-    for token in tokens:
+    for token in sentence_tokens:
         if token == '?':
             question_count += 1
     return question_count
 
-def exclamations_count(sentence):
-    tokens = word_tokenize(sentence)
+def exclamations_count(sentence_tokens):
     exclamation_count = 0
-    for token in tokens:
+    for token in sentence_tokens:
         if token == '!':
             exclamation_count += 1
     return exclamation_count
 
-def contractions_count(sentence):
-    tokens = word_tokenize(sentence.lower())
+def contractions_count(sentence_tokens):
     contractions = ["'s", "'re", "'ve", "'ll", "'d", "'t", "'m", "'n", "'bout", "'cause", "'ya", "'all", "'em", "'gain", "'cept", "'fore", "'round", "'till", "'neath", "'pon", "'neath", "'twixt", "'tween", "'ight", "'ere", "'am", "'tis", "'twas", "'twere", "'twill"]
     contraction_count = 0
-    for token in tokens:
+    for token in sentence_tokens:
         if token in contractions:
             contraction_count += 1
     return contraction_count
@@ -96,72 +89,63 @@ def count_syllables_nltk(word):
         return max([len([y for y in x if y[-1].isdigit()]) for x in d[word]])
     return 0
 
-def flesch_score(sentence):
-    words = word_count(sentence)
-    sentences = sentence_count(sentence)
+def readability_features(sentence, sentence_tokens, words, sentences):
     avg_sent_length = average_sent_length(sentences, words)
     syllables = 0
-    for token in word_tokenize(sentence.lower()):
-        syllables += count_syllables_nltk(token)
-    average_syllables_per_word = syllables / word_count(sentence)
-    return 206.835 - (1.015 * avg_sent_length) - (84.6 * average_syllables_per_word)
-
-def gunning_fog_index(words, sentences, text):
-    # Gunning Fog Index = 0.4 * [(words/sentences) + 100*(complex words/words)]
-    # Complex words are those with 3 or more syllables
-    if sentences == 0 or words == 0:
-        return 0
-    word_tokens = word_tokenize(text.lower())
     complex_word_count = 0
-    for word in word_tokens:
-        syllable_count = count_syllables_nltk(word)
+    for token in sentence_tokens:
+        syllable_count = count_syllables_nltk(token)
+        syllables += syllable_count
         if syllable_count >= 3:
             complex_word_count += 1
-    gunning_fog = 0.4 * ((words/sentences) + 100 * (complex_word_count/words))
-    return gunning_fog
+    average_syllables_per_word = syllables / words
+    flesch = 206.835 - (1.015 * avg_sent_length) - (84.6 * average_syllables_per_word)
+    if sentences == 0 or words == 0:
+        gunning_fog = 0
+    else:
+        gunning_fog = 0.4 * ((words/sentences) + 100 * (complex_word_count/words))
+    return flesch, gunning_fog
 
 # Named Entity features
-def first_person_pronouns(sentence):
-    tokens = word_tokenize(sentence.lower())
+def first_person_pronouns(sentence_tokens):
     count = 0
     first_person_list = ['I', 'me', 'mine', 'myself', 'we', 'us', 'our', 'ourselves']
-    for token in tokens:
+    for token in sentence_tokens:
         if token in first_person_list:
             count += 1
     return count
 
-def direct_addresses_count(sentence):
-    tokens = word_tokenize(sentence.lower())
+def direct_addresses_count(sentence_tokens):
     count = 0
     direct_address_list = ['you', 'your', 'yours', 'yourself', 'yourselves', 'hey', 'hi', 'hello']
-    for token in tokens:
+    for token in sentence_tokens:
         if token in direct_address_list:
             count += 1
     return count
 
 def list_of_features(sentence):
+    sentence_tokens = word_tokenize(sentence.lower())
     features = []
     # Lexical features
-    words = word_count(sentence)
-    unique_words = unique_word_count(sentence)
+    words = word_count(sentence_tokens)
+    unique_words = unique_word_count(sentence_tokens)
     characters = character_count(sentence)
     avg_word_lengths = avg_word_length(characters, words)
     unique_prop = unique_proportion(unique_words, words)
-    hapax_legomenons = hapax_legomenon_rate(sentence)
+    hapax_legomenons = hapax_legomenon_rate(sentence, sentence_tokens)
     # syntax features
     sentences = sentence_count(sentence)
     average_sent_lengths = average_sent_length(sentences, words)
-    punctuations = punctuation_count(sentence)
-    stop_words = stop_words_count(sentence)
-    questions = question_count(sentence)
-    exclamations = exclamations_count(sentence)
-    contractions = contractions_count(sentence)
+    punctuations = punctuation_count(sentence_tokens)
+    stop_words = stop_words_count(sentence_tokens)
+    questions = question_count(sentence_tokens)
+    exclamations = exclamations_count(sentence_tokens)
+    contractions = contractions_count(sentence_tokens)
     # Readability features
-    flesch_reading_score = flesch_score(sentence)
-    gunning_fog = gunning_fog_index(words, sentences, sentence)
+    flesch_reading_score, gunning_fog = readability_features(sentence, sentence_tokens, words, sentences)
     # Named Entity features
-    first_persons = first_person_pronouns(sentence)
-    direct_addresses = direct_addresses_count(sentence)
+    first_persons = first_person_pronouns(sentence_tokens)
+    direct_addresses = direct_addresses_count(sentence_tokens)
 
     features.append(words)
     features.append(unique_words)
