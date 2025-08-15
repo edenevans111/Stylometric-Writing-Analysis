@@ -6,7 +6,11 @@ from nltk.corpus import cmudict
 import string
 import csv
 import pandas as pd
+import re
 import numpy as np
+
+with open('5000_words.txt', 'r') as file:
+    common_words = [line.strip() for line in file.readlines() if line.strip()]
 
 # lexical features
 def word_count(sentence_tokens):
@@ -59,6 +63,21 @@ def stop_words_count(sentence_tokens):
             stop_count += 1
     return stop_count
 
+def verbs_adjectives_adverbs_count(sentence_tokens):
+    pos_tags = nltk.pos_tag(sentence_tokens)
+    complex_verbs = 0
+    sophisticated_adjectives = 0
+    adjectives_pattern = r"(ive|ous|ic|ical|al|ar|ary|ine|ile|ant|ent|ate|esque)$"
+    adverbs = 0
+    for word, tag in pos_tags:
+        if tag.startswith('VB') and word not in common_words:
+            complex_verbs += 1
+        elif tag.startswith('JJ') and re.search(adjectives_pattern, word):
+            sophisticated_adjectives += 1
+        elif tag.startswith('RB'):
+            adverbs += 1
+    return complex_verbs, sophisticated_adjectives, adverbs
+
 def question_count(sentence_tokens):
     question_count = 0
     for token in sentence_tokens:
@@ -89,12 +108,27 @@ def count_syllables_nltk(word):
         return max([len([y for y in x if y[-1].isdigit()]) for x in d[word]])
     return 0
 
+def quick_syllable_count(word): # Probably not as good but much quicker
+    word = word.lower()
+    count = 0
+    vowels = "aeiouy"
+    if word[0] in vowels:
+        count += 1
+    for index in range(1, len(word)):
+        if word[index] in vowels and word[index - 1] not in vowels:
+            count += 1
+    if word.endswith("e"):
+        count -= 1
+    if count == 0:
+        count += 1
+    return count
+
 def readability_features(sentence, sentence_tokens, words, sentences):
     avg_sent_length = average_sent_length(sentences, words)
     syllables = 0
     complex_word_count = 0
     for token in sentence_tokens:
-        syllable_count = count_syllables_nltk(token)
+        syllable_count = quick_syllable_count(token)
         syllables += syllable_count
         if syllable_count >= 3:
             complex_word_count += 1
@@ -138,6 +172,7 @@ def list_of_features(sentence):
     average_sent_lengths = average_sent_length(sentences, words)
     punctuations = punctuation_count(sentence_tokens)
     stop_words = stop_words_count(sentence_tokens)
+    complex_verbs, sophisticated_adjectives, adverbs = verbs_adjectives_adverbs_count(sentence_tokens)
     questions = question_count(sentence_tokens)
     exclamations = exclamations_count(sentence_tokens)
     contractions = contractions_count(sentence_tokens)
@@ -158,6 +193,9 @@ def list_of_features(sentence):
     features.append(average_sent_lengths)
     features.append(punctuations)
     features.append(stop_words)
+    features.append(complex_verbs)
+    features.append(sophisticated_adjectives)
+    features.append(adverbs)
     features.append(questions)
     features.append(exclamations)
     features.append(contractions)
@@ -173,9 +211,6 @@ def list_of_features(sentence):
 
 ## Things that still need to be figured out:
 # AbstractNounCount
-# ComplexVerbCount
-# SophisticatedAdjectiveCount
-# AdverbCount
 # ComplexSentenceCount
 # Emotion word count
 # Polarity
@@ -191,7 +226,7 @@ def main():
     # Need to make a pandas dataframe
     df = pd.DataFrame(columns=['Word Count', 'Unique Words', 'Characters', 'Average Word Lengths', 'Unique Proportion',
                                'Hapax Legomenons', 'Sentence Count', 'Average Sentence Length',
-                               'Punctuation Marks', 'Stop Words', 'Questions', 'Exclamations', 'Contractions',
+                               'Punctuation Marks', 'Stop Words', 'Complex Verbs', 'Sophisticated Adjectives', 'Adverbs', 'Questions', 'Exclamations', 'Contractions',
                                'Flesch Reading Score', 'Gunning Fog', 'First Person Pronouns', 'Direct Addresses', 'Role'])
 
     with open('sample_reasoning_turns_wait_roles copy.csv') as infile:
@@ -203,7 +238,7 @@ def main():
             df.loc[len(df)] = features
 
     print(df.head())
-    df.to_csv('stylometric_features.csv')
+    df.to_csv('stylometric_features.csv',index=False)
 
         
 
