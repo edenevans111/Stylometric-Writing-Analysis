@@ -157,19 +157,11 @@ def list_of_features(sentence):
     
     return features
 
-
-## Things that still need to be figured out:
-# Emotion word count
-# FleschReadingEase
-# Contraction Count
-
-
-
-
 def main():
     df = pd.DataFrame(columns=['Word Count', 'Unique Words', 'Characters', 'Average Word Lengths', 
                                'Hapax Legomenons', 'Sentence Count', 'Average Sentence Length', 
-                               'Punctuation Marks', 'Stop Words', 'Questions', 'First Person Pronouns', 'Flesch Reading Score', 'Role'])
+                               'Punctuation Marks', 'Stop Words', 'Questions', 'First Person Pronouns', 
+                               'Flesch Reading Score', 'Role'])
 
     with open('sample_reasoning_turns_wait_roles copy.csv') as infile:
         csvreader = csv.reader(infile)
