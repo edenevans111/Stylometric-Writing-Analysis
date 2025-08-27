@@ -7,6 +7,8 @@ import string
 import csv
 import pandas as pd
 import numpy as np
+import spacy
+from spacy_syllables import SpacySyllables
 
 # lexical features
 def word_count(sentence):
@@ -48,7 +50,6 @@ def average_sent_length(sent_count, word_count):
 def punctuation_count(sentence):
     word_tokens = word_tokenize(sentence)
     punctuation_marks = set(string.punctuation)
-    # I know that I have a good set of punctuation marks here now
     punctuation_count = 0
     for token in word_tokens:
         if token in punctuation_marks:
@@ -104,7 +105,6 @@ def count_syllable(sentence):
     return syllable_count
 
 def count_syllables_nltk(sentence):
-    # nltk.download('cmudict')
     d = cmudict.dict()
     sentence.lower() 
     tokens = word_tokenize(sentence)
@@ -116,11 +116,21 @@ def count_syllables_nltk(sentence):
             syllable_count += 0
     return syllable_count
 
+def count_syllables_spacy(sentence):
+    nlp = spacy.load("en_core_web_sm")
+    # I don't know that I really need this line:
+    nlp.add_pipe("syllables", after="tagger")
+    doc = nlp(sentence)
+    syllable_count = 0
+    for token in doc:
+        syllable_count += token._.syllables_count
+    return syllable_count
+
 def flesch_score(sentence):
     words = word_count(sentence)
     sentences = sentence_count(sentence)
     avg_sent_length = average_sent_length(sentences, words)
-    syllables = count_syllables_nltk(sentence)
+    syllables = count_syllables_spacy(sentence)
     average_syllables_per_word = syllables / word_count(sentence)
     return 206.835 - (1.015 * avg_sent_length) - (84.6 * average_syllables_per_word)
 
