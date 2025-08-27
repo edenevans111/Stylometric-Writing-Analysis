@@ -8,6 +8,7 @@ import csv
 import pandas as pd
 import re
 import numpy as np
+import spacy
 
 with open('5000_words.txt', 'r') as file:
     common_words = [line.strip() for line in file.readlines() if line.strip()]
@@ -76,6 +77,24 @@ def verbs_adjectives_adverbs_count(sentence_tokens):
         elif tag.startswith('RB'):
             adverbs += 1
     return complex_verbs, sophisticated_adjectives, adverbs
+
+def abstract_noun_suffix(word):
+    abstract_suffixes = ['-ship', '-ity', '-ment', '-ness', '-ism', '-th', '-ancy', '-ency', '-dom']
+    for suffix in abstract_suffixes:
+        if word.endswith(suffix):
+            return True
+    return False
+
+def abstract_noun_count(sentence_tokens): # this will probably misclassify some of the nouns
+    abstract_nouns = ['love', 'anger', 'joy', 'courage', 'peace', 'chaos', 'childhood', 'grief', 'envy']
+    tagged_words = nltk.pos_tag(sentence_tokens)
+    count_abstract_nouns = 0
+    for word, tag in tagged_words:
+        if tag in ['NN', 'NNS']:
+            if word.lower in abstract_nouns or abstract_noun_suffix(word):
+                count_abstract_nouns += 1
+    return count_abstract_nouns
+
 
 def question_count(sentence_tokens):
     question_count = 0
