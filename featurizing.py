@@ -9,6 +9,7 @@ import pandas as pd
 import re
 import numpy as np
 import spacy
+from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 
 with open('5000_words.txt', 'r') as file:
     common_words = [line.strip() for line in file.readlines() if line.strip()]
@@ -78,24 +79,6 @@ def verbs_adjectives_adverbs_count(sentence_tokens):
             adverbs += 1
     return complex_verbs, sophisticated_adjectives, adverbs
 
-def abstract_noun_suffix(word):
-    abstract_suffixes = ['-ship', '-ity', '-ment', '-ness', '-ism', '-th', '-ancy', '-ency', '-dom']
-    for suffix in abstract_suffixes:
-        if word.endswith(suffix):
-            return True
-    return False
-
-def abstract_noun_count(sentence_tokens): # this will probably misclassify some of the nouns
-    abstract_nouns = ['love', 'anger', 'joy', 'courage', 'peace', 'chaos', 'childhood', 'grief', 'envy']
-    tagged_words = nltk.pos_tag(sentence_tokens)
-    count_abstract_nouns = 0
-    for word, tag in tagged_words:
-        if tag in ['NN', 'NNS']:
-            if word.lower in abstract_nouns or abstract_noun_suffix(word):
-                count_abstract_nouns += 1
-    return count_abstract_nouns
-
-
 def question_count(sentence_tokens):
     question_count = 0
     for token in sentence_tokens:
@@ -117,6 +100,30 @@ def contractions_count(sentence_tokens):
         if token in contractions:
             contraction_count += 1
     return contraction_count
+
+def abstract_noun_suffix(word):
+    abstract_suffixes = ['-ship', '-ity', '-ment', '-ness', '-ism', '-th', '-ancy', '-ency', '-dom']
+    for suffix in abstract_suffixes:
+        if word.endswith(suffix):
+            return True
+    return False
+
+def abstract_noun_count(sentence_tokens): # this will probably misclassify some of the nouns
+    abstract_nouns = ['love', 'anger', 'joy', 'courage', 'peace', 'chaos', 'childhood', 'grief', 'envy']
+    tagged_words = nltk.pos_tag(sentence_tokens)
+    count_abstract_nouns = 0
+    for word, tag in tagged_words:
+        if tag in ['NN', 'NNS']:
+            if word.lower in abstract_nouns or abstract_noun_suffix(word):
+                count_abstract_nouns += 1
+    return count_abstract_nouns
+
+# Sentiment features
+def vader_score(sentence):
+    sid_obj = SentimentIntensityAnalyzer()
+    sentiment_dict = sid_obj.polarity_scores(sentence)
+    compound_score = sentiment_dict['compound']
+    return compound_score
 
 # Readability features
 def count_syllables_nltk(word):
@@ -194,6 +201,9 @@ def list_of_features(sentence):
     questions = question_count(sentence_tokens)
     exclamations = exclamations_count(sentence_tokens)
     contractions = contractions_count(sentence_tokens)
+    abstract_nouns = abstract_noun_count(sentence_tokens)
+    # Sentiment Features
+    vader = vader_score(sentence)
     # Readability features
     flesch_reading_score, gunning_fog = readability_features(sentence, sentence_tokens, words, sentences)
     # Named Entity features
@@ -217,6 +227,9 @@ def list_of_features(sentence):
     features.append(questions)
     features.append(exclamations)
     features.append(contractions)
+    features.append(abstract_nouns)
+
+    features.append(vader)
 
     features.append(flesch_reading_score)
     features.append(gunning_fog)
@@ -228,7 +241,7 @@ def list_of_features(sentence):
 
 
 ## Things that still need to be figured out:
-# AbstractNounCount
+# AbstractNounCount - done, might not be super accurate though
 # ComplexSentenceCount
 # Emotion word count
 # Polarity
@@ -244,7 +257,8 @@ def main():
     # Need to make a pandas dataframe
     df = pd.DataFrame(columns=['Word Count', 'Unique Words', 'Characters', 'Average Word Lengths', 'Unique Proportion',
                                'Hapax Legomenons', 'Sentence Count', 'Average Sentence Length',
-                               'Punctuation Marks', 'Stop Words', 'Complex Verbs', 'Sophisticated Adjectives', 'Adverbs', 'Questions', 'Exclamations', 'Contractions',
+                               'Punctuation Marks', 'Stop Words', 'Complex Verbs', 'Sophisticated Adjectives', 'Adverbs', 'Questions', 'Exclamations', 'Contractions', 'Abstract Nouns',
+                               'VADER Score',
                                'Flesch Reading Score', 'Gunning Fog', 'First Person Pronouns', 'Direct Addresses', 'Role'])
 
     with open('sample_reasoning_turns_wait_roles copy.csv') as infile:
