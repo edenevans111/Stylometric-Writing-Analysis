@@ -11,6 +11,7 @@ import numpy as np
 import spacy
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
 from textblob import TextBlob
+import datefinder
 
 with open('5000_words.txt', 'r') as file:
     common_words = [line.strip() for line in file.readlines() if line.strip()]
@@ -189,15 +190,12 @@ def direct_addresses_count(sentence_tokens):
             count += 1
     return count
 
-def date_entities(sentence_tokens):
-    date_words = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september',
-                  'october', 'november', 'december', 'monday', 'tuesday', 'wednesday', 'thursday',
-                  'friday', 'saturday', 'sunday']
-    date_count = 0
-    for word in sentence_tokens:
-        if word in date_words:
-            date_count += 1
-    return date_count
+def date_entities(sentence):
+    matches = datefinder.find_dates(sentence)
+    dates = []
+    for match in matches:
+        dates.append(match.date)
+    return len(dates)
 
 
 def list_of_features(sentence):
@@ -229,6 +227,7 @@ def list_of_features(sentence):
     # Named Entity features
     first_persons = first_person_pronouns(sentence_tokens)
     direct_addresses = direct_addresses_count(sentence_tokens)
+    dates = date_entities(sentence)
 
     features.append(words)
     features.append(unique_words)
@@ -258,6 +257,7 @@ def list_of_features(sentence):
 
     features.append(first_persons)
     features.append(direct_addresses)
+    features.append(dates)
     
     return features
 
@@ -270,7 +270,7 @@ def list_of_features(sentence):
 # Subjectivity - done now (used TextBlob library)
 # VaderCompound - also done now
 # Person Entities
-# Date Entities - there is something there now, but it's not perfect
+# Date Entities - there should be something usable there now
 # Bigram uniqueness
 # Trigram uniqueness
 # Syntax variety
@@ -281,7 +281,7 @@ def main():
                                'Hapax Legomenons', 'Sentence Count', 'Average Sentence Length',
                                'Punctuation Marks', 'Stop Words', 'Complex Verbs', 'Sophisticated Adjectives', 'Adverbs', 'Questions', 'Exclamations', 'Contractions', 'Abstract Nouns',
                                'VADER Score', 'Subjectivity', 'Polarity',
-                               'Flesch Reading Score', 'Gunning Fog', 'First Person Pronouns', 'Direct Addresses', 'Role'])
+                               'Flesch Reading Score', 'Gunning Fog', 'First Person Pronouns', 'Direct Addresses', 'Date Entities', 'Role'])
 
     with open('sample_reasoning_turns_wait_roles copy.csv') as infile:
         csvreader = csv.reader(infile)
@@ -292,7 +292,7 @@ def main():
             df.loc[len(df)] = features
 
     print(df.head())
-    print(df.head()['Polarity'])
+    print(df.head()['Date Entities'])
     df.to_csv('stylometric_features.csv',index=False)
 
         
