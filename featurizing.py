@@ -189,6 +189,17 @@ def direct_addresses_count(sentence_tokens):
             count += 1
     return count
 
+def date_entities(sentence_tokens):
+    date_words = ['january', 'february', 'march', 'april', 'may', 'june', 'july', 'august', 'september',
+                  'october', 'november', 'december', 'monday', 'tuesday', 'wednesday', 'thursday',
+                  'friday', 'saturday', 'sunday']
+    date_count = 0
+    for word in sentence_tokens:
+        if word in date_words:
+            date_count += 1
+    return date_count
+
+
 def list_of_features(sentence):
     sentence_tokens = word_tokenize(sentence.lower())
     features = []
@@ -259,7 +270,7 @@ def list_of_features(sentence):
 # Subjectivity - done now (used TextBlob library)
 # VaderCompound - also done now
 # Person Entities
-# Date Entities
+# Date Entities - there is something there now, but it's not perfect
 # Bigram uniqueness
 # Trigram uniqueness
 # Syntax variety
