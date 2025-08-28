@@ -10,6 +10,7 @@ import re
 import numpy as np
 import spacy
 from vaderSentiment.vaderSentiment import SentimentIntensityAnalyzer
+from textblob import TextBlob
 
 with open('5000_words.txt', 'r') as file:
     common_words = [line.strip() for line in file.readlines() if line.strip()]
@@ -125,6 +126,12 @@ def vader_score(sentence):
     compound_score = sentiment_dict['compound']
     return compound_score
 
+def subjectivity_score(sentence):
+    return TextBlob(sentence).sentiment.subjectivity
+
+def polarity_score(sentence):
+    return TextBlob(sentence).sentiment.polarity
+
 # Readability features
 def count_syllables_nltk(word):
     # nltk.download('cmudict')
@@ -204,6 +211,8 @@ def list_of_features(sentence):
     abstract_nouns = abstract_noun_count(sentence_tokens)
     # Sentiment Features
     vader = vader_score(sentence)
+    subjectivity = subjectivity_score(sentence)
+    polarity = polarity_score(sentence)
     # Readability features
     flesch_reading_score, gunning_fog = readability_features(sentence, sentence_tokens, words, sentences)
     # Named Entity features
@@ -230,6 +239,8 @@ def list_of_features(sentence):
     features.append(abstract_nouns)
 
     features.append(vader)
+    features.append(subjectivity)
+    features.append(polarity)
 
     features.append(flesch_reading_score)
     features.append(gunning_fog)
@@ -244,9 +255,9 @@ def list_of_features(sentence):
 # AbstractNounCount - done, might not be super accurate though
 # ComplexSentenceCount
 # Emotion word count
-# Polarity
-# Subjectivity
-# VaderCompound
+# Polarity - done now (used TextBlob library)
+# Subjectivity - done now (used TextBlob library)
+# VaderCompound - also done now
 # Person Entities
 # Date Entities
 # Bigram uniqueness
@@ -258,7 +269,7 @@ def main():
     df = pd.DataFrame(columns=['Word Count', 'Unique Words', 'Characters', 'Average Word Lengths', 'Unique Proportion',
                                'Hapax Legomenons', 'Sentence Count', 'Average Sentence Length',
                                'Punctuation Marks', 'Stop Words', 'Complex Verbs', 'Sophisticated Adjectives', 'Adverbs', 'Questions', 'Exclamations', 'Contractions', 'Abstract Nouns',
-                               'VADER Score',
+                               'VADER Score', 'Subjectivity', 'Polarity',
                                'Flesch Reading Score', 'Gunning Fog', 'First Person Pronouns', 'Direct Addresses', 'Role'])
 
     with open('sample_reasoning_turns_wait_roles copy.csv') as infile:
@@ -270,6 +281,7 @@ def main():
             df.loc[len(df)] = features
 
     print(df.head())
+    print(df.head()['Polarity'])
     df.to_csv('stylometric_features.csv',index=False)
 
         
