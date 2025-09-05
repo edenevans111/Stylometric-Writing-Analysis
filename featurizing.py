@@ -241,7 +241,6 @@ def list_of_features(sentence):
     first_persons = first_person_pronouns(sentence_tokens)
     direct_addresses = direct_addresses_count(sentence_tokens)
     dates = date_entities(sentence)
-    people = person_entities(sentence_tokens)
 
     features.append(words)
     features.append(unique_words)
@@ -272,7 +271,6 @@ def list_of_features(sentence):
     features.append(first_persons)
     features.append(direct_addresses)
     features.append(dates)
-    features.append(people)
     
     return features
 
@@ -295,7 +293,7 @@ def main():
                                'Hapax Legomenons', 'Sentence Count', 'Average Sentence Length',
                                'Punctuation Marks', 'Stop Words', 'Complex Verbs', 'Sophisticated Adjectives', 'Adverbs', 'Questions', 'Exclamations', 'Contractions', 'Abstract Nouns',
                                'VADER Score', 'Subjectivity', 'Polarity',
-                               'Flesch Reading Score', 'Gunning Fog', 'First Person Pronouns', 'Direct Addresses', 'Date Entities', 'Person Entities', 'Role'])
+                               'Flesch Reading Score', 'Gunning Fog', 'First Person Pronouns', 'Direct Addresses', 'Date Entities', 'Role'])
 
     with open('sample_reasoning_turns_wait_roles copy.csv') as infile:
         csvreader = csv.reader(infile)
@@ -303,10 +301,10 @@ def main():
         for row in csvreader:
             features = list_of_features(row[0])
             features.append(row[1])
+
             df.loc[len(df)] = features
 
     print(df.head())
-    print(df.head()['Person Entities'])
     df.to_csv('stylometric_features.csv',index=False)
 
         
